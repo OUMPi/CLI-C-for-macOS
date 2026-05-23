@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+**/target/
+
+# Build outputs
+src-tauri/target/
+src-tauri/gen/
+
+# Logs and caches
+*.log
+.vite/
+.npm/
+.pnpm-store/
+
+# Environment
+.env
+.env.local
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Tauri specific
+src-tauri/src-tauri.log

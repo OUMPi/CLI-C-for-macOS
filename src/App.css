@@ -1,0 +1,641 @@
+/* ============================================================
+   全局
+============================================================ */
+* { box-sizing: border-box; }
+html, body, #root {
+  width: 100%; height: 100%; margin: 0; padding: 0;
+  background: transparent; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   主面板：液态玻璃 + 银色金属底
+============================================================ */
+.launcher-panel {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  border-radius: 18px; overflow: hidden;
+  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+  font-size: 13px; position: relative;
+  background:
+    linear-gradient(135deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(232, 236, 242, 0.42) 35%,
+      rgba(208, 214, 224, 0.45) 65%,
+      rgba(196, 204, 216, 0.55) 100%),
+    radial-gradient(120% 60% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 60%);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.25),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 -1px 0 rgba(150, 160, 175, 0.25) inset;
+}
+.launcher-panel::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0) 70%,
+    rgba(255, 255, 255, 0.18) 100%);
+  border-radius: inherit; mix-blend-mode: overlay; z-index: 0;
+}
+.launcher-panel > * { position: relative; z-index: 1; }
+
+/* ============================================================
+   队列预览栏
+============================================================ */
+.queue-bar {
+  flex: 0 0 auto;
+  min-height: 56px; max-height: 120px;
+  padding: 8px 8px 8px 10px;
+  display: flex; align-items: stretch; gap: 8px;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.45),
+    rgba(255, 255, 255, 0.18));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 0 rgba(160, 170, 185, 0.2);
+}
+.queue-chips-wrap {
+  flex: 1; min-width: 0; overflow-y: auto;
+  display: flex; align-items: center;
+}
+.queue-empty {
+  display: block; width: 100%; text-align: center;
+  font-size: 11.5px; color: #8a8a8e;
+  line-height: 36px; font-style: italic;
+}
+.queue-chips {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  align-items: center; width: 100%;
+}
+
+/* && 按钮：深底白字 鲜亮苹果蓝 */
+.op-btn-inline {
+  flex: 0 0 auto; align-self: center;
+  height: 38px; padding: 0 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px; font-weight: 700; letter-spacing: -0.5px;
+  color: #fff;
+  background: linear-gradient(180deg, #0a84ff, #006edc);
+  border: 1px solid rgba(0, 80, 200, 0.6);
+  border-radius: 10px; cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -1px 0 rgba(0, 60, 150, 0.4) inset,
+    0 3px 10px rgba(10, 132, 255, 0.35);
+  user-select: none;
+}
+.op-btn-inline:hover {
+  background: linear-gradient(180deg, #2090ff, #0a78e8);
+  transform: translateY(-1px);
+}
+.op-btn-inline:active { transform: translateY(0); }
+.op-btn-inline.selected {
+  background: linear-gradient(180deg, #0060c8, #004a9e);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 1px 0 rgba(255, 255, 255, 0.2) inset;
+}
+
+/* 执行按钮 */
+.execute-btn-inline {
+  flex: 0 0 auto; align-self: center;
+  min-width: 44px; height: 38px; padding: 0 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  font-size: 12px; font-weight: 700; color: #fff;
+  background: linear-gradient(180deg, #3b6bb8, #2553a0);
+  border: 1px solid rgba(30, 70, 130, 0.65);
+  border-radius: 10px; cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.3) inset,
+    0 -1px 0 rgba(20, 50, 100, 0.4) inset,
+    0 3px 10px rgba(45, 90, 160, 0.3);
+}
+.execute-btn-inline:hover:not(:disabled) {
+  background: linear-gradient(180deg, #4a7bc8, #2f5fb0);
+  transform: translateY(-1px);
+}
+.execute-btn-inline:active:not(:disabled) { transform: translateY(0); }
+.execute-btn-inline:disabled {
+  background: linear-gradient(180deg,
+    rgba(190, 198, 210, 0.6),
+    rgba(160, 170, 185, 0.55));
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(140, 150, 165, 0.4);
+  cursor: not-allowed; box-shadow: none;
+}
+.exec-count { font-family: "SF Mono", Menlo, monospace; font-size: 11px; }
+
+/* ============================================================
+   队列 chip
+============================================================ */
+.queue-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 4px 3px 8px;
+  font-size: 11px; font-family: "SF Mono", Menlo, monospace;
+  color: #1d1d1f;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.85),
+    rgba(232, 238, 246, 0.65));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 6px; cursor: grab; user-select: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(0, 0, 0, 0.05);
+  max-width: 140px;
+}
+.queue-chip:active { cursor: grabbing; }
+
+.queue-chip-op {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(232, 242, 255, 0.85));
+  color: #0a4fb8; font-weight: 700;
+  border-color: rgba(150, 185, 230, 0.8);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 1) inset,
+    0 1px 3px rgba(10, 80, 200, 0.15);
+}
+.queue-chip-path {
+  background: linear-gradient(180deg,
+    rgba(190, 220, 255, 0.85),
+    rgba(150, 195, 245, 0.6));
+  color: #0a3d75;
+}
+
+.queue-chip-free {
+  background: linear-gradient(180deg,
+    rgba(240, 232, 250, 0.9),
+    rgba(220, 210, 245, 0.7));
+  color: #5a3a8a;
+  border-color: rgba(190, 170, 230, 0.7);
+  font-style: italic;
+}
+.chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; padding: 0;
+  background: rgba(0, 0, 0, 0.06); border: none;
+  border-radius: 4px; color: #5a5a5e; cursor: pointer; flex-shrink: 0;
+}
+.chip-remove:hover { background: rgba(255, 59, 48, 0.85); color: #fff; }
+
+/* ============================================================
+   section（保留 padding 占位但 title 已废弃）
+============================================================ */
+.section { padding: 10px 12px 4px; }
+
+/* ============================================================
+   主区域：命令上 + 路径下，各占一半，各自滚
+============================================================ */
+.main-area {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: 10px 12px 12px;
+  gap: 8px;
+}
+
+.pane {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* 命令和路径用细微背景色差区分 */
+.pane-cmd {
+  background: linear-gradient(180deg,
+    rgba(255, 252, 245, 0.45),
+    rgba(248, 244, 232, 0.25));
+}
+.pane-path {
+  background: linear-gradient(180deg,
+    rgba(238, 246, 255, 0.45),
+    rgba(218, 232, 250, 0.25));
+}
+
+.pane-title {
+  flex: 0 0 auto;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.6px; text-transform: uppercase;
+  color: #5a5a5e; padding-left: 2px;
+}
+
+.pane-header {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px;
+}
+.pane-header .pane-title { flex: 0 0 auto; margin-bottom: 0; }
+.pane-actions {
+  flex: 1; min-width: 0;
+  display: flex; gap: 6px; justify-content: flex-end;
+}
+
+/* 命令和路径板块标题都在 pane-header 里，pane-header 的 margin-bottom 已统一 */
+
+/* ============================================================
+   命令网格（可滚）
+============================================================ */
+.cmd-grid {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  overflow-y: auto;
+  align-content: flex-start;
+  padding: 2px 2px 6px;
+}
+
+.cmd-btn {
+  padding: 9px 8px;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 11.5px; color: #1d1d1f;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(232, 238, 246, 0.4));
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 9px; cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  user-select: none;
+  height: 34px;  /* 固定高度让网格更整齐 */
+}
+.cmd-btn:hover {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(228, 235, 245, 0.6));
+  border-color: rgba(80, 110, 160, 0.35);
+  transform: translateY(-1px);
+}
+.cmd-btn.selected {
+  background: linear-gradient(180deg, #1d1d1f, #3a3a3c);
+  color: #fff; border-color: rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================
+   路径工具按钮（用在 pane-actions 里）
+============================================================ */
+.path-tool-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 6px 10px;
+  font-size: 11.5px; font-weight: 500; color: #1d1d1f;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(225, 232, 242, 0.5));
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  height: 28px;
+}
+.path-tool-btn:hover {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(235, 245, 255, 0.7));
+  transform: translateY(-1px);
+}
+.gear-btn { flex: 0 0 28px; width: 28px; padding: 0; color: #5a5a5e; }
+.gear-btn:hover { color: #0a84ff; }
+.read-store-btn { color: #0a84ff; }
+
+/* Aa 按钮：命令板块右侧自由输入入口 */
+.aa-btn {
+  flex: 0 0 28px;
+  width: 28px;
+  padding: 0;
+  font-family: "SF Pro Display", -apple-system, sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #5a5a5e;
+}
+.aa-btn:hover { color: #0a84ff; }
+
+/* Aa 弹出的输入框（popover） */
+.free-input-popover {
+  flex: 0 0 auto;
+  margin-bottom: 6px;
+  padding: 4px;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.85),
+    rgba(245, 248, 252, 0.7));
+  border: 1px solid rgba(180, 195, 220, 0.7);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 1) inset,
+    0 3px 10px rgba(30, 60, 130, 0.15);
+}
+.free-input-field {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: "SF Mono", Menlo, monospace;
+  color: #1d1d1f;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(180, 195, 220, 0.5);
+  border-radius: 6px;
+  outline: none;
+}
+.free-input-field:focus {
+  border-color: #0a84ff;
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.15);
+}
+
+/* ============================================================
+   路径列表
+============================================================ */
+.path-list {
+  flex: 1; min-height: 0;
+  display: flex; flex-wrap: wrap; align-content: flex-start;
+  gap: 5px; padding: 2px 2px 6px;
+  overflow-y: auto;
+}
+.path-empty {
+  width: 100%; text-align: center;
+  font-size: 11px; color: #8a8a8e; font-style: italic;
+  padding: 14px 8px;
+}
+.path-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 9px;
+  font-size: 11.5px; font-family: "SF Mono", Menlo, monospace;
+  color: #0a3d75;
+  background: linear-gradient(180deg,
+    rgba(220, 235, 255, 0.85),
+    rgba(190, 215, 245, 0.55));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(0, 0, 0, 0.05);
+  user-select: none; max-width: 160px;
+}
+.path-btn:hover {
+  background: linear-gradient(180deg,
+    rgba(230, 242, 255, 0.95),
+    rgba(200, 225, 250, 0.7));
+  transform: translateY(-1px);
+}
+.path-btn.selected {
+  background: linear-gradient(180deg, #2c4a78, #1a3a6b);
+  color: #fff; border-color: rgba(15, 35, 75, 0.7);
+}
+.path-btn-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ============================================================
+   设置视图：上下两块各占一半
+============================================================ */
+.settings-view {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: 10px 12px 12px;
+}
+.settings-header {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.settings-title {
+  flex: 1; text-align: center;
+  font-size: 13px; font-weight: 600; color: #1d1d1f;
+}
+.path-tool-btn.icon-only {
+  width: 32px; height: 32px; padding: 0; flex: 0 0 32px;
+}
+.header-spacer {
+  width: 32px; height: 32px; flex: 0 0 32px;
+}
+
+.settings-block {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+}
+.settings-block:last-child { margin-bottom: 0; }
+
+/* 两块用不同背景色区分 */
+.block-cmd {
+  background: linear-gradient(180deg,
+    rgba(255, 250, 240, 0.55),  /* 暖白：奶油色调 */
+    rgba(248, 240, 225, 0.35));
+}
+.block-path {
+  background: linear-gradient(180deg,
+    rgba(232, 242, 255, 0.55),  /* 冷蓝白 */
+    rgba(210, 228, 248, 0.35));
+}
+
+.block-title {
+  flex: 0 0 auto;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.6px; text-transform: uppercase;
+  color: #5a5a5e; margin-bottom: 6px; padding-left: 2px;
+}
+
+.block-list {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 5px;
+  padding-right: 2px;
+}
+
+.settings-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 9px;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(245, 248, 252, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.settings-row-main { flex: 1; min-width: 0; }
+.settings-row-name {
+  font-size: 12.5px; font-weight: 600; color: #1d1d1f;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.settings-row-cmd {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 11px; color: #0a4fb8; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.settings-row-desc {
+  font-size: 10.5px; color: #6e6e72; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.row-action {
+  flex: 0 0 26px; width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px; cursor: pointer;
+  color: #5a5a5e; transition: all 0.15s ease;
+}
+.row-action:hover { background: rgba(255, 255, 255, 0.9); color: #0a84ff; }
+
+.add-row {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 8px;
+  font-size: 12px; font-weight: 600; color: #0a84ff;
+  background: linear-gradient(180deg,
+    rgba(220, 238, 255, 0.85),
+    rgba(190, 220, 250, 0.55));
+  border: 1px dashed rgba(10, 132, 255, 0.5);
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 2px;
+}
+.add-row:hover {
+  background: linear-gradient(180deg,
+    rgba(220, 238, 255, 0.95),
+    rgba(190, 220, 250, 0.75));
+  border-style: solid;
+}
+
+/* ============================================================
+   表单弹层
+============================================================ */
+.form-overlay {
+  position: absolute; inset: 0;
+  background: rgba(20, 25, 35, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; z-index: 30; border-radius: inherit;
+}
+.form-card {
+  width: 100%; max-width: 320px; padding: 16px;
+  background: linear-gradient(180deg,
+    rgba(252, 253, 255, 0.97),
+    rgba(238, 242, 248, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 1) inset;
+}
+.form-title {
+  font-size: 14px; font-weight: 600;
+  color: #1d1d1f; margin-bottom: 12px;
+}
+.form-label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: #6e6e72; margin: 8px 0 4px;
+}
+.form-input {
+  width: 100%; padding: 7px 9px;
+  font-size: 12.5px; color: #1d1d1f;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(180, 195, 220, 0.6);
+  border-radius: 7px; outline: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.form-input.mono { font-family: "SF Mono", Menlo, monospace; }
+.form-input:focus {
+  border-color: #0a84ff;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.18);
+}
+.form-actions {
+  display: flex; gap: 8px;
+  margin-top: 14px; justify-content: flex-end;
+}
+.form-btn {
+  padding: 7px 14px;
+  font-size: 12.5px; font-weight: 600;
+  border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+.form-btn.ghost {
+  color: #1d1d1f;
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(180, 195, 220, 0.6);
+}
+.form-btn.ghost:hover { background: rgba(255, 255, 255, 0.9); }
+.form-btn.primary {
+  color: #fff;
+  background: linear-gradient(180deg, #0a84ff, #006edc);
+  border-color: rgba(0, 80, 200, 0.5);
+  box-shadow: 0 2px 6px rgba(10, 132, 255, 0.3);
+}
+.form-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #2090ff, #0a78e8);
+}
+.form-btn.primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/* ============================================================
+   拖拽删除区
+============================================================ */
+.delete-zone {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: #c63030;
+  background: linear-gradient(180deg,
+    rgba(255, 200, 200, 0.75),
+    rgba(255, 160, 160, 0.55));
+  border: 1.5px dashed rgba(220, 60, 60, 0.65);
+  border-radius: 12px;
+  pointer-events: none; opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.2s ease; z-index: 10;
+}
+.delete-zone.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.delete-zone.over {
+  background: linear-gradient(180deg,
+    rgba(255, 100, 100, 0.85),
+    rgba(220, 60, 60, 0.75));
+  color: #fff; border-color: rgba(180, 30, 30, 0.9);
+  transform: translateY(0) scale(1.02);
+}
+
+/* ============================================================
+   错误 toast
+============================================================ */
+.toast {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  padding: 9px 12px;
+  font-size: 12px; color: #fff;
+  background: rgba(180, 40, 40, 0.92);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer; z-index: 25;
+}
+
+/* ============================================================
+   滚动条
+============================================================ */
+.queue-bar::-webkit-scrollbar,
+.path-list::-webkit-scrollbar,
+.cmd-grid::-webkit-scrollbar,
+.block-list::-webkit-scrollbar {
+  width: 4px; height: 4px;
+}
+.queue-bar::-webkit-scrollbar-thumb,
+.path-list::-webkit-scrollbar-thumb,
+.cmd-grid::-webkit-scrollbar-thumb,
+.block-list::-webkit-scrollbar-thumb {
+  background: rgba(120, 130, 145, 0.35);
+  border-radius: 2px;
+}
