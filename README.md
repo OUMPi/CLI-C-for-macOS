@@ -2,6 +2,7 @@
 
 一个让终端命令按钮化的悬浮面板工具，随 Terminal 启动，快速执行常用命令。
 
+🎵**ALL YOU NEED IS CLI-C ON CLI**🎵
 
 https://github.com/user-attachments/assets/b3e0a1d6-9b33-4cbe-8997-693e52b2b8f0
 
